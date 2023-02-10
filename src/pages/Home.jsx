@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { setCategoryId, setCurrentPage } from '../redux/slices/filterSlice';
@@ -10,13 +9,13 @@ import Categories from '../components/Categories';
 import Pagination from '../components/Pagination';
 import { useContext } from 'react';
 import { SearchContext } from '../App';
+import { fetchPizzas } from '../redux/slices/pizzaSlice';
 
 export const Home = () => {
   const dispath = useDispatch();
   const { categoryId, sort, currentPage } = useSelector((state) => state.filter);
+  const { items, status } = useSelector((state) => state.pizza);
 
-  const [items, setItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { searchValue } = useContext(SearchContext);
 
   const onChangeCategory = (idx) => {
@@ -27,24 +26,27 @@ export const Home = () => {
     dispath(setCurrentPage(number));
   };
 
-  useEffect(() => {
-    setIsLoading(true);
-
-    const order = sort.sortProperty.includes('-') ? 'asc' : 'desc';
+  const getPizzas = async () => {
     const sortBy = sort.sortProperty.replace('-', '');
+    const order = sort.sortProperty.includes('-') ? 'asc' : 'desc';
     const category = categoryId > 0 ? `category=${categoryId}` : '';
     const search = searchValue ? `&search=${searchValue}` : '';
 
-    axios
-      .get(
-        `https://63cb13c14f53a00420301812.mockapi.io/items?page=${currentPage}&limit=4&${category}&sortBy=${sortBy}&order=${order}${search}`,
-      )
-      .then((response) => {
-        setItems(response.data);
-        setIsLoading(false);
-      });
+    dispath(
+      fetchPizzas({
+        order,
+        sortBy,
+        category,
+        search,
+        currentPage,
+      }),
+    );
 
     window.scrollTo(0, 0);
+  };
+
+  useEffect(() => {
+    getPizzas();
   }, [categoryId, sort.sortProperty, searchValue, currentPage]);
 
   const pizzas = items.map((obj) => <PizzaBlock key={obj.id} {...obj} />);
@@ -57,7 +59,14 @@ export const Home = () => {
         <Sort />
       </div>
       <h2 className="content__title">Все пиццы</h2>
-      <div className="content__items">{isLoading ? skeletons : pizzas}</div>
+      {status === 'error' ? (
+        <div className="content__error-info">
+          <h2>Произошла ошибка 😕</h2>
+          <p>Не удалось получить пиццы :(</p>
+        </div>
+      ) : (
+        <div className="content__items">{status === 'loading' ? skeletons : pizzas}</div>
+      )}
       <Pagination currentPage={currentPage} onChangePage={onChangePage} />
     </div>
   );
