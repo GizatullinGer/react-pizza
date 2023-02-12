@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 
 import { selectFilter, setCategoryId, setCurrentPage } from '../redux/slices/filterSlice';
 import PizzaBlock from '../components/PizzaBlock/PizzaBlock';
@@ -45,7 +46,11 @@ export const Home = () => {
     getPizzas();
   }, [categoryId, sort.sortProperty, searchValue, currentPage]);
 
-  const pizzas = items.map((obj) => <PizzaBlock key={obj.id} {...obj} />);
+  const pizzas = items.map((obj) => (
+    <Link key={obj.id} to={`/pizza/${obj.id}`}>
+      <PizzaBlock {...obj} />
+    </Link>
+  ));
   const skeletons = [...new Array(6).keys()].map((key) => <Skeleton key={key} />);
 
   return (
