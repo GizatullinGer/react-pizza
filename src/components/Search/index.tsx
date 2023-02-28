@@ -5,25 +5,25 @@ import debounce from 'lodash.debounce';
 
 import styles from './Search.module.scss';
 
-const Search = () => {
+const Search: React.FC = () => {
   const dispath = useDispatch();
   const [value, setValue] = useState('');
-  const inputRef = useRef();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const onClickClear = () => {
     dispath(setSearchValue(''));
     setValue('');
-    inputRef.current.focus();
+    inputRef.current?.focus();
   };
 
   const updateSearchValue = useCallback(
-    debounce((str) => {
+    debounce((str: string) => {
       dispath(setSearchValue(str));
     }, 1000),
     [],
   );
 
-  const onChangeInput = (event) => {
+  const onChangeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setValue(event.target.value);
     updateSearchValue(event.target.value);
   };
